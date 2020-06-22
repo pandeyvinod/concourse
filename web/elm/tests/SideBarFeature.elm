@@ -282,6 +282,15 @@ hasSideBar iAmLookingAtThePage =
                 >> when iAmLookingAtThePageBelowTheTopBar
                 >> then_ iSeeNoSideBar
         ]
+    , describe "sidebar sections" <|
+        -- zoe
+        [ test "when there are favorited pipelines" <|
+            given iHaveAnOpenSideBar_
+                >> given iClickedThePipelineGroup
+                >> given iClickedTheFirstPipelineStar
+                >> when iAmLookingAtTheSideBar
+                >> then_ iSeeFavoritesSection
+        ]
     , describe "teams list" <|
         let
             iHaveAnExpandedTeam =
@@ -409,7 +418,7 @@ hasSideBar iAmLookingAtThePage =
                 >> given iClickedThePipelineGroup
                 >> when iAmLookingAtThePipelineList
                 >> then_ iSeeItLaysOutVertically
-        , test "pipeline has two children" <|
+        , test "pipeline has three children" <|
             given iHaveAnOpenSideBar_
                 >> given iClickedThePipelineGroup
                 >> when iAmLookingAtTheFirstPipeline
@@ -542,6 +551,8 @@ hasSideBar iAmLookingAtThePage =
             given iHaveAnExpandedTeam
                 >> when iAmLookingAtTheFirstPipelineIcon
                 >> then_ iSeeItAlignsWithTheTeamName
+
+        --zoe
         ]
     ]
 
@@ -892,11 +903,11 @@ iSeeTwoChildren =
 
 
 iSeeTwoTeams =
-    Query.children [ class "side-bar-team" ] >> Query.count (Expect.equal 2)
+    Query.children [ class "side-bar-team" ] >> Query.first >> Query.children [] >> Query.count (Expect.equal 2)
 
 
 iSeeThreeChildren =
-    Query.children [] >> Query.count (Expect.equal 3)
+    Query.children [] >> Query.index 0 >> Query.children [] >> Query.count (Expect.equal 3)
 
 
 iAmLookingAtThePageBelowTheTopBar =
@@ -1117,11 +1128,19 @@ iSeeItIsDim =
 
 
 iAmLookingAtThePipelineList =
-    iAmLookingAtTheTeam >> Query.children [] >> Query.index 1
+    --zoe
+    -- iAmLookingAtTheTeam >> Query.children [] >> Query.index 0
+    iAmLookingAtTheAllPipelinesSectionHeader
+        >> Query.children []
+        >> Query.index 0
 
 
 iAmLookingAtTheFirstPipeline =
-    iAmLookingAtThePipelineList >> Query.children [] >> Query.first
+    iAmLookingAtThePipelineList >> Query.children [] >> Query.index 1
+
+
+
+-- test
 
 
 iAmLookingAtTheFirstPipelineLink =
@@ -1146,7 +1165,7 @@ iSeeItContainsThePipelineName =
 
 
 iAmLookingAtTheTeamHeader =
-    iAmLookingAtTheTeam >> Query.children [] >> Query.first
+    iAmLookingAtTheTeam >> Query.children [] >> Query.first >> Query.children [] >> Query.first
 
 
 iAmLookingAtTheTeamName =
@@ -1222,6 +1241,14 @@ iAmLookingAtTheFirstPipelineStar =
     iAmLookingAtTheFirstPipeline
         >> Query.findAll [ attribute <| Attr.attribute "aria-label" "Favorite Icon" ]
         >> Query.index 0
+
+
+iAmLookingAtTheAllPipelinesSectionHeader =
+    Tuple.first >> Common.queryView >> Query.find [ id "all-pipelines" ]
+
+
+iAmLookingAtTheFavoritesSectionHeader =
+    Tuple.first >> Common.queryView >> Query.find [ id "favorites" ]
 
 
 iSeeAPipelineIcon =
@@ -1371,6 +1398,10 @@ iDoNotSeeAHamburgerIcon =
 
 iSeeNoSideBar =
     Query.hasNot [ id "side-bar" ]
+
+
+iSeeFavoritesSection =
+    Query.has [ text "favorites" ]
 
 
 myBrowserFetchedPipelinesFromMultipleTeams =
