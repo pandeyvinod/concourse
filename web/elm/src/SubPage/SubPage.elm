@@ -110,6 +110,9 @@ cleanup route =
         Routes.Build _ ->
             Build.cleanup
 
+        Routes.Dashboard _ ->
+            Dashboard.cleanup
+
         _ ->
             []
 

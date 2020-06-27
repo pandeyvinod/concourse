@@ -24,10 +24,12 @@ type alias Model =
             , query : String
             , pipelinesWithResourceErrors : Dict ( String, String ) Bool
             , jobs : FetchResult (Dict ( String, String, String ) Concourse.Job)
+            , jobIDs : Dict Int Concourse.JobIdentifier
             , pipelineLayers : Dict ( String, String ) (List (List Concourse.JobIdentifier))
             , teams : FetchResult (List Concourse.Team)
             , dragState : DragState
             , dropState : DropState
+            , isWatchingListAllJobs : Bool
             , isJobsRequestFinished : Bool
             , isTeamsRequestFinished : Bool
             , isPipelinesRequestFinished : Bool
