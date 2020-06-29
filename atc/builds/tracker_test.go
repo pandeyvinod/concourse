@@ -72,6 +72,28 @@ func (s *TrackerSuite) TestTrackRunsStartedBuilds() {
 	s.ElementsMatch(startedBuilds, ranBuilds)
 }
 
+func (s *TrackerSuite) TestTrackerDoesntCrashWhenOneBuildPanic() {
+	startedBuilds := []db.Build{}
+	fakeBuild := new(dbfakes.FakeBuild)
+	fakeBuild.IDReturns(1)
+	startedBuilds = append(startedBuilds, fakeBuild)
+
+	s.fakeBuildFactory.GetAllStartedBuildsReturns(startedBuilds, nil)
+
+	fakeEngineBuild := new(enginefakes.FakeRunnable)
+	fakeEngineBuild.RunStub = func(context.Context) {
+		panic("something went wrong")
+	}
+	s.fakeEngine.NewBuildReturns(fakeEngineBuild)
+
+	err := s.tracker.Run(context.TODO())
+	s.NoError(err)
+
+	s.Eventually(func() bool { return fakeEngineBuild.RunCallCount() == 1 }, time.Second, 10*time.Millisecond)
+	s.Eventually(func() bool { return fakeBuild.FinishCallCount() == 1 }, time.Second, 10*time.Millisecond)
+	s.Eventually(func() bool { return fakeBuild.FinishArgsForCall(0) == db.BuildStatusFailed }, time.Second, 10*time.Millisecond)
+}
+
 func (s *TrackerSuite) TestTrackDoesntTrackAlreadyRunningBuilds() {
 	fakeBuild := new(dbfakes.FakeBuild)
 	fakeBuild.IDReturns(1)
